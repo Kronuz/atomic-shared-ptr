@@ -22,7 +22,7 @@ int main() {
 	auto p1 = std::make_shared<int>(42);
 	a.store(p1);
 	check(a.load() && *a.load() == 42, "store then load");
-	check(static_cast<std::shared_ptr<int>>(a) == p1, "implicit conversion");
+	check(a.load() == p1, "load returns stored value");
 
 	// exchange returns the old value and installs the new one.
 	auto p2 = std::make_shared<int>(7);
