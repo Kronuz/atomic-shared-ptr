@@ -18,6 +18,10 @@ while (!head.compare_exchange_weak(cur, next)) { /* retry */ }
 Predates (and mirrors) the C++20 `std::atomic<std::shared_ptr<T>>`, so it is a drop-in
 for toolchains/codebases that cannot yet rely on that specialization. Header-only.
 
+## Dependencies
+
+**None** — header-only, standard library only.
+
 ## Build / test
 ```sh
 cmake -B build && cmake --build build && ctest --test-dir build   # incl. an 8-thread smoke test
