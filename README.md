@@ -1,5 +1,7 @@
 # atomic-shared-ptr
 
+[![CI](https://github.com/Kronuz/atomic-shared-ptr/actions/workflows/ci.yml/badge.svg)](https://github.com/Kronuz/atomic-shared-ptr/actions/workflows/ci.yml)
+
 `atomic_shared_ptr<T>` -- thread-safe atomic operations over a `std::shared_ptr<T>`,
 with the same member API as `std::atomic` (`load`/`store`/`exchange`/
 `compare_exchange_weak`/`_strong`/`is_lock_free`). Extracted from
