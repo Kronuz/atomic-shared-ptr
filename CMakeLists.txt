@@ -20,7 +20,8 @@ add_library(atomic-shared-ptr::atomic-shared-ptr ALIAS atomic-shared-ptr)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	enable_testing()
+	find_package(Threads REQUIRED)  # the test's threads; FreeBSD's libc needs -pthread for them
 	add_executable(atomic-shared-ptr_test test/test.cc)
-	target_link_libraries(atomic-shared-ptr_test PRIVATE atomic-shared-ptr)
+	target_link_libraries(atomic-shared-ptr_test PRIVATE atomic-shared-ptr Threads::Threads)
 	add_test(NAME atomic-shared-ptr COMMAND atomic-shared-ptr_test)
 endif()
