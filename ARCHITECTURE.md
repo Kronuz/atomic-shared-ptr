@@ -1,34 +1,44 @@
 # Architecture
 
-`atomic_shared_ptr<T>` is a thin, single-member class: it holds one `std::shared_ptr<T>`
-and routes every operation through the free `std::atomic_*` functions that specialize
-atomic access for `shared_ptr` (`atomic_load_explicit`, `atomic_store_explicit`,
-`atomic_exchange_explicit`, `atomic_compare_exchange_*_explicit`).
+`atomic_shared_ptr.h` has two branches, chosen at compile time by the standard library's
+feature-test macro, and one API.
 
-## The shape
+## The two branches
 
-The value is the *interface*: those free functions are awkward and easy to misuse
-(pass the wrong address, forget the memory order), so this wraps them behind the same
-member API as `std::atomic` — `load` / `store` / `exchange` / `compare_exchange_weak` /
-`compare_exchange_strong`, each taking a `std::memory_order` (default
-`seq_cst`), plus an implicit conversion to `std::shared_ptr<T>` for read sites.
+- **Alias.** When `<version>` defines `__cpp_lib_atomic_shared_ptr` (P0718, the C++20
+  `std::atomic<std::shared_ptr<T>>` specialization), `atomic_shared_ptr<T>` is
+  `using atomic_shared_ptr = std::atomic<std::shared_ptr<T>>`. The header adds nothing.
+  libstdc++ 12 and later take this branch.
+- **Wrapper.** Otherwise `atomic_shared_ptr<T>` is a class with one `std::shared_ptr<T>`
+  member that routes every operation through the free functions that give atomic access to a
+  `shared_ptr` (`std::atomic_load_explicit`, `std::atomic_store_explicit`,
+  `std::atomic_exchange_explicit`, `std::atomic_compare_exchange_*_explicit`,
+  `std::atomic_is_lock_free`). C++20 deprecates those functions, and they are the only working
+  option on a standard library without the specialization, such as Apple clang's libc++.
 
-It is non-copyable (like `std::atomic`) and movable. It predates and mirrors the C++20
-`std::atomic<std::shared_ptr<T>>` specialization, so it is a drop-in for toolchains or
-codebases that cannot yet rely on that.
+## Why both are drop-ins
+
+The wrapper exposes exactly the member API of the standard specialization: `load`, `store`,
+`exchange`, `compare_exchange_weak`, `compare_exchange_strong` (each with a single-order and
+a success/failure-order overload, defaulting to `seq_cst`), `is_lock_free`, and assignment
+from a `std::shared_ptr<T>`. Like `std::atomic`, it is neither copyable nor movable, and it
+has no conversion to `std::shared_ptr<T>`. Code that compiles against one branch therefore
+compiles against the other, and the wrapper retires without source changes when a toolchain
+gains P0718.
 
 ## Memory model
 
-Every operation forwards its `std::memory_order` straight to the underlying
-`std::atomic_*_explicit` call; the class adds no ordering of its own. Whether the
-operations are lock-free is the standard library's call — `is_lock_free()` reports it.
+Every operation forwards its `std::memory_order` to the underlying call; the wrapper adds no
+ordering of its own. Whether the operations are lock-free is the standard library's answer,
+reported by `is_lock_free()`; on libc++ and libstdc++ it is `false`.
 
 ## Dependencies
 
-**None.** Standard library only (`<atomic>`, `<memory>`).
+None. Standard library only (`<atomic>`, `<memory>`, `<utility>`, `<version>`).
 
 ## Invariants
 
-- Semantics match `std::atomic<std::shared_ptr>`; keep it a drop-in for that.
-- Non-copyable, movable. Do not add a copy — atomics are not copyable.
-- Verbatim from Xapiand.
+- Semantics match `std::atomic<std::shared_ptr<T>>`; keep the two branches interchangeable.
+- Neither copyable nor movable, and no implicit conversion: the alias branch has none of
+  them, so adding one to the wrapper would let code build on old toolchains and break on new
+  ones.
