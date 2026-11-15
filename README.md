@@ -83,6 +83,8 @@ Not for:
 
 ## 📚 Documentation
 
+- [Built to Disappear](https://kronuz.github.io/blog/atomic-shared-ptr/):
+  the Familiars post on why it exists and how it works.
 - [ARCHITECTURE.md](ARCHITECTURE.md): the two branches and why both are drop-ins.
 - [AGENTS.md](AGENTS.md): repository map.
 - [Catalog entry](https://github.com/Kronuz/cpp-libraries/blob/main/AGENTS.md#atomic-shared-ptr)
